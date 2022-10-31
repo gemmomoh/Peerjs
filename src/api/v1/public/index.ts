@@ -3,14 +3,14 @@ import { IConfig } from "../../../config";
 import { IRealm } from "../../../models/realm";
 
 export default ({ config, realm }: {
-  config: IConfig; realm: IRealm;
+  config: IConfig, realm: IRealm
 }): express.Router => {
   const app = express.Router();
 
   // Retrieve guaranteed random ID.
   app.get("/id", (_, res: express.Response) => {
     res.contentType("html");
-    res.send(realm.generateClientId(config.generateClientId));
+    res.send(realm.generateClientId(config.genRandomId));
   });
 
   // Get a list of all peers for a key, enabled by the `allowDiscovery` flag.

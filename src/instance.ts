@@ -1,6 +1,5 @@
 import express from "express";
 import { Server } from "net";
-import path from "path";
 import { IClient } from "./models/client";
 import { IMessage } from "./models/message";
 import { Realm } from "./models/realm";
@@ -13,15 +12,15 @@ import { Api } from "./api";
 import { IConfig } from "./config";
 
 export const createInstance = ({ app, server, options }: {
-  app: express.Application;
-  server: Server;
+  app: express.Application,
+  server: Server,
   options: IConfig;
 }): void => {
   const config = options;
   const realm: IRealm = new Realm();
   const messageHandler = new MessageHandler(realm);
 
-  const api = Api({ config, realm });
+  const api = Api({ config, realm, messageHandler });
   const messagesExpire: IMessagesExpire = new MessagesExpire({ realm, config, messageHandler });
   const checkBrokenConnections = new CheckBrokenConnections({
     realm,
@@ -33,13 +32,10 @@ export const createInstance = ({ app, server, options }: {
 
   app.use(options.path, api);
 
-  //use mountpath for WS server
-  const customConfig = { ...config, path: path.posix.join(app.path(), options.path, '/') };
-
   const wss: IWebSocketServer = new WebSocketServer({
     server,
     realm,
-    config: customConfig
+    config
   });
 
   wss.on("connection", (client: IClient) => {
@@ -48,7 +44,7 @@ export const createInstance = ({ app, server, options }: {
     if (messageQueue) {
       let message: IMessage | undefined;
 
-      while ((message = messageQueue.readMessage())) {
+      while (message = messageQueue.readMessage()) {
         messageHandler.handle(client, message);
       }
       realm.clearMessageQueue(client.getId());

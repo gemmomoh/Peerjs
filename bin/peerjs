@@ -4,67 +4,59 @@
 const path = require("path");
 const pkg = require("../package.json");
 const fs = require("fs");
-const optimistUsageLength = 98;
-const yargs = require("yargs");
 const version = pkg.version;
 const { PeerServer } = require("../dist/src");
-const opts = yargs
+const opts = require("optimist")
   .usage("Usage: $0")
-  .wrap(Math.min(optimistUsageLength, yargs.terminalWidth()))
   .options({
     expire_timeout: {
-      demandOption: false,
+      demand: false,
       alias: "t",
-      describe: "timeout (milliseconds)",
+      description: "timeout (milliseconds)",
       default: 5000
     },
     concurrent_limit: {
-      demandOption: false,
+      demand: false,
       alias: "c",
-      describe: "concurrent limit",
+      description: "concurrent limit",
       default: 5000
     },
     alive_timeout: {
-      demandOption: false,
-      describe: "broken connection check timeout (milliseconds)",
+      demand: false,
+      description: "broken connection check timeout (milliseconds)",
       default: 60000
     },
     key: {
-      demandOption: false,
+      demand: false,
       alias: "k",
-      describe: "connection key",
+      description: "connection key",
       default: "peerjs"
     },
     sslkey: {
-      demandOption: false,
-      describe: "path to SSL key"
+      demand: false,
+      description: "path to SSL key"
     },
     sslcert: {
-      demandOption: false,
-      describe: "path to SSL certificate"
-    },
-    host: {
-      demandOption: false,
-      alias: "H",
-      describe: "host"
+      demand: false,
+      description: "path to SSL certificate"
     },
     port: {
-      demandOption: true,
+      demand: true,
       alias: "p",
-      describe: "port"
+      description: "port"
     },
     path: {
-      demandOption: false,
-      describe: "custom path",
+      demand: false,
+      description: "custom path",
       default: "/"
     },
     allow_discovery: {
-      demandOption: false,
-      describe: "allow discovery of peers"
+      demand: false,
+      description: "allow discovery of peers"
     },
     proxied: {
-      demandOption: false,
-      describe: "Set true if PeerServer stays behind a reverse proxy",
+      demand: false,
+      description: "Set true if PeerServer stays behind a reverse proxy",
       default: false
     }
   })
@@ -100,17 +92,6 @@ const server = PeerServer(opts, server => {
     "Started PeerServer on %s, port: %s, path: %s (v. %s)",
     host, port, userPath || "/", version
   );
-
-  const shutdownApp = () => {
-    server.close(() => {
-      console.log('Http server closed.');
-
-      process.exit(0);
-    });
-  };
-
-  process.on('SIGINT', shutdownApp);
-  process.on('SIGTERM', shutdownApp);
 });
 
 server.on("connection", client => {

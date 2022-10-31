@@ -58,10 +58,7 @@ export class MessagesExpire implements IMessagesExpire {
     const seen: Record<string, boolean> = {};
 
     for (const destinationClientId of destinationClientsIds) {
-      const messageQueue = this.realm.getMessageQueueById(destinationClientId);
-
-      if (!messageQueue) continue;
-
+      const messageQueue = this.realm.getMessageQueueById(destinationClientId)!;
       const lastReadDiff = now - messageQueue.getLastReadAt();
 
       if (lastReadDiff < maxDiff) continue;
@@ -69,16 +66,14 @@ export class MessagesExpire implements IMessagesExpire {
       const messages = messageQueue.getMessages();
 
       for (const message of messages) {
-        const seenKey = `${message.src}_${message.dst}`;
-
-        if (!seen[seenKey]) {
+        if (!seen[message.src]) {
           this.messageHandler.handle(undefined, {
             type: MessageType.EXPIRE,
             src: message.dst,
             dst: message.src
           });
 
-          seen[seenKey] = true;
+          seen[message.src] = true;
         }
       }
 
