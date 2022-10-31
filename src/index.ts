@@ -37,28 +37,21 @@ function ExpressPeerServer(server: Server, options?: IConfig) {
 function PeerServer(options: Optional<IConfig> = {}, callback?: (server: Server) => void) {
   const app = express();
 
-  const newOptions: IConfig = {
+  let newOptions: IConfig = {
     ...defaultConfig,
     ...options
   };
 
-  let path = newOptions.path;
   const port = newOptions.port;
-
-  if (!path.startsWith('/')) {
-    path = "/" + path;
-  }
-
-  if (!path.endsWith('/')) {
-    path += "/";
-  }
+  const host = newOptions.host;
 
   let server: Server;
 
-  if (newOptions.ssl && newOptions.ssl.key && newOptions.ssl.cert) {
-    server = https.createServer(options.ssl!, app);
-    // @ts-ignore
-    delete newOptions.ssl;
+  const { ssl, ...restOptions } = newOptions;
+  if (ssl && Object.keys(ssl).length) {
+    server = https.createServer(ssl, app);
+
+    newOptions = restOptions;
   } else {
     server = http.createServer(app);
   }
@@ -66,7 +59,7 @@ function PeerServer(options: Optional<IConfig> = {}, callback?: (server: Server)
   const peerjs = ExpressPeerServer(server, newOptions);
   app.use(peerjs);
 
-  server.listen(port, () => callback?.(server));
+  server.listen(port, host, () => callback?.(server));
 
   return peerjs;
 }
